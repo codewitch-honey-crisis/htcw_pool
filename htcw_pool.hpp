@@ -30,6 +30,15 @@ namespace htcw {
             s_length = size;
             return true;
         }
+        static size_t capacity() {
+            return s_length;
+        }
+        static size_t bytes_used() {
+            return s_new-s_begin;
+        }
+        static size_t bytes_free() {
+            return capacity()-bytes_used();
+        }
         static void deinitialize() {
             if(s_begin) {
                 Deallocator(s_begin);
@@ -70,7 +79,6 @@ namespace htcw {
         }
         static void deallocate_all() {
             s_new=s_begin;
-            s_length = 0;
             s_latest = nullptr;
         }
     };
