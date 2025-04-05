@@ -21,7 +21,7 @@ This behavior is at the expense of potentially unused memory as overhead, like a
 [env:node32s]
 platform = espressif32
 board = node32s
-framework = arduino
+framework = arduino ; or espidf
 lib_deps = 
-	codewitch-honey-crisis/htcw_pool@^0.2.0
+	codewitch-honey-crisis/htcw_pool@^0.2.1
 ```

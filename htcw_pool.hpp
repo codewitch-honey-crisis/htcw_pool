@@ -84,6 +84,7 @@ namespace htcw {
         static void* reallocate(void* ptr, size_t size) {
             if(!s_begin) return nullptr;
             if(!size) {
+                deallocate(ptr);
                 return nullptr;
             }
             if(ptr!=s_latest+sizeof(size_t)) {
