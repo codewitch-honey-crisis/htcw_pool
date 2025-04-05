@@ -7,7 +7,7 @@ using psram_pool = pool<1,ps_malloc>;
 
 void setup() {
     Serial.begin(115200);
-    // create a 8192KB block
+    // create a 8KB block
     if(!default_pool::initialize(8192)) {
         Serial.println("Unable to initialize pool");
         while(1);
