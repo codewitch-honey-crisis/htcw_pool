@@ -1,0 +1,5 @@
+menu "htcw_pool configuration"
+  config HTCW_POOL
+    bool "Enable HTCW_POOL"
+    default n
+endmenu

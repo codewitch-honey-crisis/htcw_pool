@@ -1,0 +1,22 @@
+{
+    "name": "htcw_pool",
+    "version": "0.1.0",
+    "description": "Provides memory pooling",
+    "keywords": ["memory", "pool"],
+    "authors": {
+        "name":"honey the codewitch",
+        "homepage": "https://www.codeproject.com/Members/code-witch"
+    },
+    "license": "MIT",
+    "frameworks": "*",
+    "platforms": "*",
+    "build": {
+        "unflags": "-std=gnu++11",
+        "flags": "-std=gnu++17"
+    },
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/codewitch-honey-crisis/htcw_pool.git"
+    }
+}
