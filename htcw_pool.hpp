@@ -50,31 +50,57 @@ namespace htcw {
         }
         static void* allocate(size_t size) {
             if(!size || !s_begin) return nullptr;
-            if((s_new-s_begin)+size>s_length) {
+            if((s_new-s_begin)+size+sizeof(size_t)>s_length) {
                 return nullptr;
             }
             s_latest = s_new;
-            s_new+=size;
-            return s_latest;
+            s_new+=(size+sizeof(size_t));
+            (*((size_t*)s_latest))=size;
+            return s_latest+sizeof(size_t);
         }
         static void deallocate(void* ptr) {
-            // do nothing
+            if(s_begin==nullptr) {
+                return;
+            }
+            if(ptr==((uint8_t*)s_latest)+sizeof(size_t)) {
+                // we can reclaim this memory
+                uint8_t* b = s_begin;
+                size_t used = bytes_used();
+                size_t len = *(size_t*)s_latest;
+                s_new = b+(used-(len+sizeof(size_t)));
+                uint8_t* p = (uint8_t*)b;
+                uint8_t* op = p;
+                size_t remaining = s_new-b;
+                while(remaining && p) {
+                    op=p;
+                    size_t l = *(size_t*)p;
+                    size_t lo = (l+sizeof(size_t));
+                    p+=lo;
+                    remaining-=l;
+                }
+                s_latest = op;
+            }
         }
         static void* reallocate(void* ptr, size_t size) {
             if(!s_begin) return nullptr;
             if(!size) {
                 return nullptr;
             }
-            if(ptr!=s_latest) {
-                return allocate(size);
+            if(ptr!=s_latest+sizeof(size_t)) {
+                void* newp = allocate(size);
+                if(newp==nullptr) {
+                    return nullptr;
+                }
+                memmove(newp,ptr,*(size_t*)(((uint8_t*)ptr)-sizeof(size_t)));
+                return newp;
             }
-            size_t len = s_new - s_latest;
-            size_t target_len = s_length-len+size;
-            if(target_len>s_length) {
+            size_t len = s_new - s_latest+sizeof(size_t);
+            size_t new_len = (bytes_used()-len+size);
+            if(new_len>s_length) {
                 return nullptr;
             }
-            s_length = target_len;
-            s_new = s_begin+target_len;
+            s_new = s_begin+new_len;
+            *(size_t*)(((uint8_t*)ptr)-sizeof(size_t))=size;
             return ptr;
         }
         static void deallocate_all() {
