@@ -87,6 +87,9 @@ namespace htcw {
                 deallocate(ptr);
                 return nullptr;
             }
+            if(ptr==nullptr) {
+                return allocate(size);
+            }
             if(ptr!=s_latest+sizeof(size_t)) {
                 void* newp = allocate(size);
                 if(newp==nullptr) {
