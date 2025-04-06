@@ -110,7 +110,7 @@ namespace htcw {
         /// @brief Attempts to deallocate memory from the pool if possible
         /// @param ptr The pointer to attempt to deallocate (not guaranteed)
         static void deallocate(void* ptr) {
-            if(s_begin==nullptr) {
+            if(s_begin==nullptr || s_latest==nullptr) {
                 return;
             }
             if(ptr==((uint8_t*)s_latest)+sizeof(size_t)) {
@@ -119,15 +119,15 @@ namespace htcw {
                 size_t used = bytes_used();
                 size_t len = *(size_t*)s_latest;
                 s_new = b+(used-(len+sizeof(size_t)));
-                uint8_t* p = (uint8_t*)b;
+                uint8_t* p = b;
                 uint8_t* op = p;
                 size_t remaining = s_new-b;
-                while(remaining && p) {
+                while(remaining) {
                     op=p;
                     size_t l = *(size_t*)p;
                     size_t lo = (l+sizeof(size_t));
                     p+=lo;
-                    remaining-=l;
+                    remaining-=lo;
                 }
                 s_latest = op;
             }

@@ -26,5 +26,5 @@ platform = espressif32
 board = node32s
 framework = arduino ; or espidf
 lib_deps = 
-	codewitch-honey-crisis/htcw_pool@^0.3.2
+	codewitch-honey-crisis/htcw_pool@^0.3.3
 ```

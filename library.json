@@ -1,6 +1,6 @@
 {
     "name": "htcw_pool",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "description": "Provides memory pooling",
     "keywords": ["memory", "pool"],
     "authors": {
