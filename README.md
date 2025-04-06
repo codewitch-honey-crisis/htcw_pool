@@ -8,7 +8,10 @@ Basically you instantiate a template of the pool, giving each pool you want a un
 using pool_t = pool<0>;
 ```
 
-You can then `initialize(size)` the pool with the desired pool size.
+You can then `initialize(size)` the pool with the desired pool size, which will allocate a buffer on your behalf.
+Alternatively you can call `initialize(ptr,size)` passing in your own buffer.
+
+`deinitialize()` deinitializes the pool and releases any memory it may have allocated.
 
 From there you can call `allocate(size)`, `deallocate(ptr)`, and `reallocate(ptr,size)` to manipulate memory.
 You can call `deallocate_all()` to invalidate all pointers and reset the pool to empty.
@@ -23,5 +26,5 @@ platform = espressif32
 board = node32s
 framework = arduino ; or espidf
 lib_deps = 
-	codewitch-honey-crisis/htcw_pool@^0.2.1
+	codewitch-honey-crisis/htcw_pool@^0.3.0
 ```

@@ -1,11 +1,14 @@
-#ifndef HTCW_HTTP_POOL
-#define HTCW_HTTP_POOL
+#ifndef HTCW_HTTP_POOL_HPP
+#define HTCW_HTTP_POOL_HPP
 #include <stdint.h>
 #include <stddef.h>
 #include <memory.h>
 namespace htcw {
     template<int Id,void*(*Allocator)(size_t)=::malloc,void(*Deallocator)(void*)=::free> class pool {
+    public:
+        constexpr static const int id = Id;
     private:
+        static bool s_own;
         static uint8_t* s_begin;
         static uint8_t* s_latest;
         static uint8_t* s_new;
@@ -18,10 +21,31 @@ namespace htcw {
             if(s_begin!=nullptr) {
                 return false;
             }
+            s_own = false;
             s_new = nullptr;
             s_latest = nullptr;
             s_length = 0;
             s_begin = (uint8_t*)Allocator(size);
+            if(!s_begin) {
+                return false;
+            }
+            s_new = s_begin;
+            s_length = size;
+            s_own = true;
+            return true;
+        }
+        static bool initialize(void* block, size_t size) {
+            if(size==0) {
+                return false;
+            }
+            if(s_begin!=nullptr) {
+                return false;
+            }
+            s_own = false;
+            s_new = nullptr;
+            s_latest = nullptr;
+            s_length = 0;
+            s_begin = block;
             if(!s_begin) {
                 return false;
             }
@@ -40,11 +64,15 @@ namespace htcw {
         }
         static void deinitialize() {
             if(s_begin) {
-                Deallocator(s_begin);
+                if(s_own) {
+                    Deallocator(s_begin);
+                }
+                s_own = false;
                 s_begin = nullptr;
                 s_new = nullptr;
                 s_latest = nullptr;
                 s_length = 0;
+                
             }
         }
         static void* allocate(size_t size) {
@@ -111,6 +139,8 @@ namespace htcw {
             s_latest = nullptr;
         }
     };
+    template<int Id,void*(*Allocator)(size_t),void(*Deallocator)(void*)>
+    bool pool<Id,Allocator,Deallocator>::s_own = false;
     template<int Id,void*(*Allocator)(size_t),void(*Deallocator)(void*)>
     uint8_t* pool<Id,Allocator,Deallocator>::s_begin = nullptr;
     template<int Id,void*(*Allocator)(size_t),void(*Deallocator)(void*)>
