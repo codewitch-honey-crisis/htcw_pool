@@ -5,7 +5,6 @@
 #include <memory.h>
 namespace htcw {
     template<int Id,void*(*Allocator)(size_t)=::malloc,void(*Deallocator)(void*)=::free> class pool {
-    public:
     private:
         static uint8_t* s_begin;
         static uint8_t* s_latest;
