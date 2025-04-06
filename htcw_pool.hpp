@@ -4,6 +4,68 @@
 #include <stddef.h>
 #include <memory.h>
 namespace htcw {
+    namespace helpers {
+        static void* pool_allocate(size_t size,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
+            if(!size || !begin) return nullptr;
+            if((*pnew-begin)+size+sizeof(size_t)>length) {
+                return nullptr;
+            }
+            *platest = *pnew;
+            *pnew+=(size+sizeof(size_t));
+            (*((size_t*)*platest))=size;
+            return *platest+sizeof(size_t);
+        }
+        static void pool_deallocate(void* ptr,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
+            if(begin==nullptr || *platest==nullptr) {
+                return;
+            }
+            if(ptr==((uint8_t*)*platest)+sizeof(size_t)) {
+                // we can reclaim this memory
+                // if it's the only entry, early out:
+                if(*platest==begin) {
+                    *platest=nullptr;
+                    *pnew = begin;
+                    return;
+                }
+                uint8_t* p = begin;
+                uint8_t* op=p;
+                while(p<*pnew) {
+                    op=p;
+                    size_t sz = *(size_t*)p;
+                    size_t totsz = sz + sizeof(size_t);
+                    p+=totsz;
+                }
+                *pnew = p;
+                *platest = op;
+            }
+        }
+        static void* pool_reallocate(void* ptr, size_t size,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
+            if(!begin) return nullptr;
+            if(!size) {
+                pool_deallocate(ptr,begin,length,platest,pnew);
+                return nullptr;
+            }
+            if(ptr==nullptr) {
+                return pool_allocate(size,begin,length,platest,pnew);
+            }
+            if(ptr!=*platest+sizeof(size_t)) {
+                void* newp = pool_allocate(size,begin,length,platest,pnew);
+                if(newp==nullptr) {
+                    return nullptr;
+                }
+                memmove(newp,ptr,*(size_t*)(((uint8_t*)ptr)-sizeof(size_t)));
+                return newp;
+            }
+            size_t len = *pnew - *platest+sizeof(size_t);
+            size_t new_len = (*pnew-begin)-len+size;
+            if(new_len>length) {
+                return nullptr;
+            }
+            *pnew = begin+new_len;
+            *(size_t*)(((uint8_t*)ptr)-sizeof(size_t))=size;
+            return ptr;
+        }
+    }
     /// @brief A memory pool
     /// @tparam Id A unique id for this pool
     /// @tparam Allocator The allocator to use to allocate memory for the pool
@@ -98,70 +160,19 @@ namespace htcw {
         /// @param size The size in bytes
         /// @return A pointer to the memory, or nullptr if unsuccessful
         static void* allocate(size_t size) {
-            if(!size || !s_begin) return nullptr;
-            if((s_new-s_begin)+size+sizeof(size_t)>s_length) {
-                return nullptr;
-            }
-            s_latest = s_new;
-            s_new+=(size+sizeof(size_t));
-            (*((size_t*)s_latest))=size;
-            return s_latest+sizeof(size_t);
+            return helpers::pool_allocate(size,s_begin,s_length,&s_latest,&s_new);
         }
         /// @brief Attempts to deallocate memory from the pool if possible
         /// @param ptr The pointer to attempt to deallocate (not guaranteed)
         static void deallocate(void* ptr) {
-            if(s_begin==nullptr || s_latest==nullptr) {
-                return;
-            }
-            if(ptr==((uint8_t*)s_latest)+sizeof(size_t)) {
-                // we can reclaim this memory
-                // if it's the only entry, early out:
-                if(s_latest==s_begin) {
-                    s_latest=nullptr;
-                    s_new = s_begin;
-                    return;
-                }
-                uint8_t* p = s_begin;
-                uint8_t* op=p;
-                while(p<s_new) {
-                    op=p;
-                    size_t sz = *(size_t*)p;
-                    size_t totsz = sz + sizeof(size_t);
-                    p+=totsz;
-                }
-                s_new = p;
-                s_latest = op;
-            }
+            return helpers::pool_deallocate(ptr,s_begin,s_length,&s_latest,&s_new);
         }
         /// @brief Attempts to reallocate memory from the pool if possible
         /// @param ptr The pointer to reallocate
         /// @param size The new size in bytes
         /// @return A pointer to the reallocated data, or nullptr if unsuccessful
         static void* reallocate(void* ptr, size_t size) {
-            if(!s_begin) return nullptr;
-            if(!size) {
-                deallocate(ptr);
-                return nullptr;
-            }
-            if(ptr==nullptr) {
-                return allocate(size);
-            }
-            if(ptr!=s_latest+sizeof(size_t)) {
-                void* newp = allocate(size);
-                if(newp==nullptr) {
-                    return nullptr;
-                }
-                memmove(newp,ptr,*(size_t*)(((uint8_t*)ptr)-sizeof(size_t)));
-                return newp;
-            }
-            size_t len = s_new - s_latest+sizeof(size_t);
-            size_t new_len = (bytes_used()-len+size);
-            if(new_len>s_length) {
-                return nullptr;
-            }
-            s_new = s_begin+new_len;
-            *(size_t*)(((uint8_t*)ptr)-sizeof(size_t))=size;
-            return ptr;
+            return helpers::pool_reallocate(ptr,size,s_begin,s_length,&s_latest,&s_new);
         }
         /// @brief Deallicates all the pointers in the pool 
         static void deallocate_all() {
