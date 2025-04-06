@@ -57,7 +57,7 @@ namespace htcw {
             s_new = nullptr;
             s_latest = nullptr;
             s_length = 0;
-            s_begin = block;
+            s_begin = (uint8_t*)block;
             if(!s_begin) {
                 return false;
             }
