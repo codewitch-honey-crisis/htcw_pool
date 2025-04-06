@@ -115,20 +115,21 @@ namespace htcw {
             }
             if(ptr==((uint8_t*)s_latest)+sizeof(size_t)) {
                 // we can reclaim this memory
-                uint8_t* b = s_begin;
-                size_t used = bytes_used();
-                size_t len = *(size_t*)s_latest;
-                s_new = b+(used-(len+sizeof(size_t)));
-                uint8_t* p = b;
-                uint8_t* op = p;
-                size_t remaining = s_new-b;
-                while(remaining) {
-                    op=p;
-                    size_t l = *(size_t*)p;
-                    size_t lo = (l+sizeof(size_t));
-                    p+=lo;
-                    remaining-=lo;
+                // if it's the only entry, early out:
+                if(s_latest==s_begin) {
+                    s_latest=nullptr;
+                    s_new = s_begin;
+                    return;
                 }
+                uint8_t* p = s_begin;
+                uint8_t* op=p;
+                while(p<s_new) {
+                    op=p;
+                    size_t sz = *(size_t*)p;
+                    size_t totsz = sz + sizeof(size_t);
+                    p+=totsz;
+                }
+                s_new = p;
                 s_latest = op;
             }
         }
