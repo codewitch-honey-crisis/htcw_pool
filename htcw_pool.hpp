@@ -5,7 +5,7 @@
 #include <memory.h>
 namespace htcw {
     namespace helpers {
-        static void* pool_allocate(size_t size,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
+        static inline void* pool_allocate(size_t size,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
             if(!size || !begin) return nullptr;
             if((*pnew-begin)+size+sizeof(size_t)>length) {
                 return nullptr;
@@ -15,7 +15,7 @@ namespace htcw {
             (*((size_t*)*platest))=size;
             return *platest+sizeof(size_t);
         }
-        static void pool_deallocate(void* ptr,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
+        static inline void pool_deallocate(void* ptr,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
             if(begin==nullptr || *platest==nullptr) {
                 return;
             }
@@ -39,7 +39,7 @@ namespace htcw {
                 *platest = op;
             }
         }
-        static void* pool_reallocate(void* ptr, size_t size,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
+        static inline void* pool_reallocate(void* ptr, size_t size,uint8_t* begin,size_t length, uint8_t** platest, uint8_t** pnew) {
             if(!begin) return nullptr;
             if(!size) {
                 pool_deallocate(ptr,begin,length,platest,pnew);
